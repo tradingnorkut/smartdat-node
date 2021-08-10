@@ -36,3 +36,31 @@ export async function getAllQueries (req :Request,res: Response){
         )
     }
 }
+
+export async function getASpecificQuery (req :Request,res: Response){
+    
+    try{
+        const queryId: string = req.params.queryId
+
+        const query = await queryModel.find( {_id : queryId}, "_id name datetime").exec()
+
+        const instruments = await instrumentModel.find( {query : queryId}, "_id name").exec()
+
+
+
+        res.status(200).json({
+            ...query,
+            instruments
+        })
+
+        
+    } catch (err) {
+        log.error(err)
+        res.status(500).json(
+            {
+                ok:false,
+                msg:"Internal server Error"
+            }
+        )
+    }
+}
