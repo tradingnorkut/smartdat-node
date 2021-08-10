@@ -1,6 +1,6 @@
 import { Schema,model } from "mongoose"
 
-const Query = new Schema({
+export const Query = new Schema({
     name: String,
     datetime : Date
 },{collection:"query"})
