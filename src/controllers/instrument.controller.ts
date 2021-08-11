@@ -8,7 +8,7 @@ export async function getASpecificInstrument(req: Request, res:Response) {
     {
         const instrumentId: string = req.params.instrumentId
 
-        const query = await instrumentModel.find( {_id : instrumentId}, "_id name params" ).exec()
+        const query = await instrumentModel.find( {_id : instrumentId}, "_id name params" ).lean()
 
 
         res.status(200).json(query)
