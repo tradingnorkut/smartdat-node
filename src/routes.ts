@@ -13,6 +13,6 @@ router.get("/queries/:queryId",getASpecificQuery)
 router.get("/instruments/:instrumentId", getASpecificInstrument)
 
 //Points Routes
-router.get("/points/:instrumentsId",getInstrumentPoints)
+router.get("/points/:instrumentId",getInstrumentPoints)
 
 export default router

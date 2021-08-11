@@ -1,54 +1,83 @@
 import { Request, Response} from "express"
 import log from "../logger"
+import instrumentModel from "../models/instrument.model"
 import pointModel from "../models/point.model"
+import countStatuses from "../utils/calc.utils"
 
 
 const pageSize = 2500
 
 export async function getInstrumentPoints (req :Request,res: Response){
 
-    console.log(req.query)
+    try {
+        // get all the reuest params and query params
+        const instrumentId = req.params.instrumentId
+        let startDate:any  = req.query.startDate 
+        let endDate:any = req.query.endDate
+        const page = Number(req.query.page)  || 1
+        let queryParameters:any = { instrument:instrumentId }
 
-    let startDate:any  = req.query.startDate 
-    let endDate:any = req.query.endDate
-    const page = Number(req.query.page)  || 1
+        // represent the fields to query
+        let fields = "_id datetime high low close"
 
-    let fields = "_id datetime high low close"
-
-    if ( req.query.calc){
-        fields += " calcs"
-    }
-
-    if ( startDate && endDate) {
+        if ( req.query.calc){
+            fields += " calcs"
+        }
         
-        startDate = new Date( startDate + "Z" )
-        endDate =  new Date( endDate + "Z" )
+        let calcTotal: any= {}
 
-        let count  = await pointModel.countDocuments( {"datetime": { "$gte": startDate, "$lte": endDate } } )
-                        .exec()
+        if ( startDate && endDate) {
+            
+            startDate = new Date( startDate + "Z" )
+            endDate =  new Date( endDate + "Z" )
 
-        const points = await pointModel.find( {"datetime": { "$gte": startDate, "$lte": endDate } }, fields )
-                                     .limit(pageSize)
-                                     .skip( (page - 1) * pageSize)
+            queryParameters.datetime = { $gte: startDate, $lte: endDate }
+
+            // Get the counting of the documents
+            calcTotal  = await pointModel.find( queryParameters, "calcs" ).exec()
+           // calcTotal = await countStatuses(calcTotal) 
+
+        } else {
+            calcTotal = await instrumentModel.findOne( {_id: instrumentId } , "buy sell stop"  ).exec()       
+            calcTotal = {
+                buy: calcTotal.buy,
+                sell: calcTotal.sell,
+                stop: calcTotal.stop
+            }
+            
+
+        }
+
+        // Get the counting of the documents
+        let count  = await pointModel.countDocuments( queryParameters )
                                      .exec()
-
         count = Math.ceil(count / pageSize)
-        
-        console.log(count)
+
+        //Get the points paginated
+        const points = await pointModel.find( queryParameters, fields )
+            .limit(pageSize)
+            .skip( (page - 1) * pageSize)
+            .exec()
+
         const resp = {
             total: count,
+            calcTotal,
             start: startDate,
             end: endDate,
             data : points
         }
+
+        //Send the final data
         res.status(200).json(resp)
-                            
+    } catch(err){
+        log.error(err)
+        res.status(500).json(
+            {
+                ok:false,
+                msg:"Internal server Error"
+            }
+        )
     }
-
-    res.send("ok")
-
-
-   
 
 
 }
