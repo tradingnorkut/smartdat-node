@@ -1,13 +1,18 @@
-import { Router, Request, Response } from "express"
+import { Router } from "express"
+import { getASpecificInstrument } from "./controllers/instrument.controller"
+import { getInstrumentPoints } from "./controllers/point.controller"
+import { getAllQueries, getASpecificQuery } from "./controllers/query.controller"
 
 const router = Router()
 
-router.get("/",(req:Request, res:Response) => {
-    res.status(200).json(
-        {
-            status: "ok"
-        }
-    )
-})
+//Queries routes
+router.get("/queries",getAllQueries)
+router.get("/queries/:queryId",getASpecificQuery)
+
+//Instruments Routes
+router.get("/instruments/:instrumentId", getASpecificInstrument)
+
+//Points Routes
+router.get("/points/:instrumentId",getInstrumentPoints)
 
 export default router
