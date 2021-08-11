@@ -18,7 +18,7 @@ export async function getInstrumentPoints (req :Request,res: Response){
         let queryParameters:any = { instrument:instrumentId }
 
         // represent the fields to query
-        let fields = "_id datetime high low close"
+        let fields = "_id datetime  open high low close"
 
         if ( req.query.calc){
             fields += " calcs"
@@ -38,32 +38,38 @@ export async function getInstrumentPoints (req :Request,res: Response){
            // calcTotal = await countStatuses(calcTotal) 
 
         } else {
-            calcTotal = await instrumentModel.findOne( {_id: instrumentId } , "buy sell stop"  ).exec()       
+            calcTotal = await instrumentModel.findOne( {_id: instrumentId } , "buy sell stop"  ).lean() 
+
             calcTotal = {
                 buy: calcTotal.buy,
                 sell: calcTotal.sell,
                 stop: calcTotal.stop
             }
-            
+
+            startDate = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("datetime").lean()
+            endDate = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("-datetime").lean()
+
+            startDate  = startDate.datetime 
+            endDate = endDate.datetime
 
         }
 
         // Get the counting of the documents
         let count  = await pointModel.countDocuments( queryParameters )
-                                     .exec()
+                                     
         count = Math.ceil(count / pageSize)
 
         //Get the points paginated
         const points = await pointModel.find( queryParameters, fields )
             .limit(pageSize)
             .skip( (page - 1) * pageSize)
-            .exec()
+            .lean()
 
         const resp = {
             total: count,
-            calcTotal,
             start: startDate,
             end: endDate,
+            calcTotal,
             data : points
         }
 
