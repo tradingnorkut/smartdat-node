@@ -47,13 +47,16 @@ export async function getInstrumentPoints (req :Request,res: Response){
                 stop: calcTotal.stop
             }
 
-            startDate = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("datetime").lean()
-            endDate = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("-datetime").lean()
-
-            startDate  = startDate.datetime 
-            endDate = endDate.datetime
+            
 
         }
+
+        //get the initial and final date for the instrument records
+        let start = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("datetime").lean()
+        let end = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("-datetime").lean()
+
+        start  = start.datetime 
+        end = end.datetime
 
         // Get the counting of the documents
         let count  = await pointModel.countDocuments( queryParameters )
@@ -69,8 +72,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
 
         const resp = {
             total: count,
-            start: startDate,
-            end: endDate,
+            start,
+            end,
             calcTotal,
             data : points
         }
