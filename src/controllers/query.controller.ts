@@ -42,7 +42,7 @@ export async function getASpecificQuery (req :Request,res: Response){
     try{
         const queryId: string = req.params.queryId
 
-        const query = await queryModel.find( {_id : queryId}, "_id name datetime").lean()
+        const query = await queryModel.findOne( {_id : queryId}, "_id name datetime").lean()
 
         const instruments = await instrumentModel.find( {query : queryId}, "_id name").lean()
 
