@@ -29,14 +29,14 @@ export async function getInstrumentPoints (req :Request,res: Response){
 
         if ( startDate && endDate) {
             
-            startDate = new Date( startDate )
-            endDate =  new Date( endDate )
+            startDate = new Date( startDate  )
+            endDate =  new Date( endDate  )
 
             queryParameters.datetime = { $gte: startDate, $lte: endDate }
 
             // Get the counting of the documents
             calcTotal  = await pointModel.find( queryParameters, "calcs" ).exec()
-           // calcTotal = await countStatuses(calcTotal) 
+            calcTotal = await countStatuses(calcTotal) 
 
         } else {
             calcTotal = await instrumentModel.findOne( {_id: instrumentId } , "buy sell stop"  ).lean() 
@@ -62,7 +62,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
 
         //Get the points paginated
         const points = await pointModel.find( queryParameters, fields )
-            .limit(pageSize)
+            .sort("datetime")
+            .limit(pageSize)            
             .skip( (page - 1) * pageSize)
             .lean()
 
