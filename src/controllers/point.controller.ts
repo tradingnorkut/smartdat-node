@@ -3,6 +3,7 @@ import log from "../logger"
 import instrumentModel from "../models/instrument.model"
 import pointModel from "../models/point.model"
 import countStatuses from "../utils/calc.utils"
+import { getASpecificInstrument } from "./instrument.controller"
 
 
 const pageSize = 2500
@@ -28,8 +29,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
 
         if ( startDate && endDate) {
             
-            startDate = new Date( startDate + "Z" )
-            endDate =  new Date( endDate + "Z" )
+            startDate = new Date( startDate )
+            endDate =  new Date( endDate )
 
             queryParameters.datetime = { $gte: startDate, $lte: endDate }
 
@@ -86,4 +87,22 @@ export async function getInstrumentPoints (req :Request,res: Response){
     }
 
 
+}
+
+export async  function getASpecificCoordinateWithCalcs( req: Request, res:Response){
+    try{
+        const pointId= req.params.pointId
+        console.log(pointId)
+        const coordinate = await pointModel.findOne({_id: pointId},"_id datetime open high low close calcs").lean()
+
+        res.status(200).json(coordinate)
+    } catch(err){
+        log.error(err)
+        res.status(500).json(
+            {
+                ok:false,
+                msg:"Internal server Error"
+            }
+        )
+    }
 }
