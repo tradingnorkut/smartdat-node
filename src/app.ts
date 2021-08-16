@@ -17,7 +17,8 @@ app.use("/api", router)
 
 custom404Handler(app)
 
-app.listen(process.env.PORT, () =>{
+app.listen(process.env.PORT || 5000, () =>{
+
     log.info(`App listening on port ${ process.env.PORT }`)
     connect()
 })
