@@ -44,10 +44,18 @@ export async function getASpecificQuery (req :Request,res: Response){
 
         const query = await queryModel.findOne( {_id : queryId}, "_id name datetime").lean()
 
+        if (!query){
+            
+            res.status(404).json({
+                ok:"false",
+                msg:"query not found"
+            })
+            return
+        }
+
         const instruments = await instrumentModel.find( {query : queryId}, "_id name").lean()
 
-
-
+        
         res.status(200).json({
             ...query,
             instruments

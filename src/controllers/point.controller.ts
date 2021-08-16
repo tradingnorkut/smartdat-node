@@ -3,7 +3,6 @@ import log from "../logger"
 import instrumentModel from "../models/instrument.model"
 import pointModel from "../models/point.model"
 import countStatuses from "../utils/calc.utils"
-import { getASpecificInstrument } from "./instrument.controller"
 
 
 const pageSize = 2500
