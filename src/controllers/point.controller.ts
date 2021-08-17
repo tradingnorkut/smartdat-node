@@ -3,9 +3,10 @@ import log from "../logger"
 import instrumentModel from "../models/instrument.model"
 import pointModel from "../models/point.model"
 import countStatuses from "../utils/calc.utils"
+import formatStrategiesAndCountingByTimeframe, { APROX_PAGE_SIZE, getTimeframeValue, TIMEFRAMES } from "../utils/specialQueries"
 
 
-const pageSize = 2500
+
 
 export async function getInstrumentPoints (req :Request,res: Response){
 
@@ -16,13 +17,23 @@ export async function getInstrumentPoints (req :Request,res: Response){
         let endDate:any = req.query.endDate
         const page = Number(req.query.page)  || 1
         let queryParameters:any = { instrument:instrumentId }
+        let formattedQuery:any =[]
 
-        // represent the fields to query
-        let fields = "_id datetime  open high low close"
+        const timeframeString = req.query.tf
 
-        if ( req.query.calc){
-            fields += " calcs"
+        let timeframeValue = 0
+
+        if( timeframeString){
+
+            timeframeValue = getTimeframeValue( timeframeString )
         }
+        
+
+        const pageSize = Math.ceil(APROX_PAGE_SIZE / timeframeValue ) * timeframeValue
+        
+        // represent the fields to query
+        let fields = "_id datetime  open high low close calcs"
+
         
         let calcTotal: any= {}
 
@@ -35,7 +46,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
 
             // Get the counting of the documents
             calcTotal  = await pointModel.find( queryParameters, "calcs" ).exec()
-            calcTotal = await countStatuses(calcTotal) 
+            formattedQuery = await formatStrategiesAndCountingByTimeframe( calcTotal, timeframeValue )
+
 
         } else {
             calcTotal = await instrumentModel.findOne( {_id: instrumentId } , "buy sell stop"  ).lean() 
@@ -45,8 +57,6 @@ export async function getInstrumentPoints (req :Request,res: Response){
                 sell: calcTotal.sell,
                 stop: calcTotal.stop
             }
-
-            
 
         }
 
@@ -69,12 +79,14 @@ export async function getInstrumentPoints (req :Request,res: Response){
             .skip( (page - 1) * pageSize)
             .lean()
 
+        formattedQuery = await formatStrategiesAndCountingByTimeframe( points, timeframeValue )
+
         const resp = {
             total: count,
             start,
             end,
             calcTotal,
-            data : points
+            data : formattedQuery
         }
 
         //Send the final data
