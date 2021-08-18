@@ -2,7 +2,7 @@ import { Request, Response} from "express"
 import log from "../logger"
 import instrumentModel from "../models/instrument.model"
 import pointModel from "../models/point.model"
-import countStatuses from "../utils/calc.utils"
+import countStatuses, { countStatusesFiltered } from "../utils/calc.utils"
 import formatStrategiesAndCountingByTimeframe, { APROX_PAGE_SIZE, getTimeframeValue, TIMEFRAMES } from "../utils/specialQueries"
 
 
@@ -18,6 +18,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
         const page = Number(req.query.page)  || 1
         let queryParameters:any = { instrument:instrumentId }
         let formattedQuery:any =[]
+        let start:any = ""
+        let end:any = ""
 
         const timeframeString = req.query.tf
 
@@ -38,7 +40,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
         let calcTotal: any= {}
 
         if ( startDate && endDate) {
-            
+            start = startDate
+            end = endDate
             startDate = new Date( startDate  )
             endDate =  new Date( endDate  )
 
@@ -47,7 +50,7 @@ export async function getInstrumentPoints (req :Request,res: Response){
             // Get the counting of the documents
             calcTotal  = await pointModel.find( queryParameters ).lean()
             formattedQuery = await formatStrategiesAndCountingByTimeframe( calcTotal, timeframeValue )
-            calcTotal = await countStatuses(calcTotal)
+            calcTotal = await countStatusesFiltered(formattedQuery)
 
 
         } else {
@@ -59,14 +62,16 @@ export async function getInstrumentPoints (req :Request,res: Response){
                 stop: calcTotal.stop
             }
 
+            //get the initial and final date for the instrument records
+            start = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("datetime").lean()
+            end = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("-datetime").lean()
+
+            start  = start.datetime 
+            end = end.datetime
+
         }
 
-        //get the initial and final date for the instrument records
-        let start = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("datetime").lean()
-        let end = await pointModel.findOne( {instrument: instrumentId } ,"datetime" ).sort("-datetime").lean()
-
-        start  = start.datetime 
-        end = end.datetime
+        
 
         // Get the counting of the documents
         let count  = await pointModel.countDocuments( queryParameters )
@@ -108,7 +113,6 @@ export async function getInstrumentPoints (req :Request,res: Response){
 export async  function getASpecificCoordinateWithCalcs( req: Request, res:Response){
     try{
         const pointId= req.params.pointId
-        console.log(pointId)
         const coordinate = await pointModel.findOne({_id: pointId},"_id datetime open high low close calcs").lean()
 
         res.status(200).json(coordinate)

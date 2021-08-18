@@ -46,4 +46,26 @@ export function countStatuses( calcList:any){
     
 }
 
+export function countStatusesFiltered( calcList:any){
+    return new Promise( (resolve,reject) => {
+        let stop = 0
+        let sell = 0
+        let buy = 0
+        
+        calcList.forEach( (calc:any) => {
+
+            stop += calc.calcTotal.stop
+            sell += calc.calcTotal.sell
+            buy += calc.calcTotal.buy
+        }) 
+
+        resolve({
+            stop,
+            sell,
+            buy
+        })
+    })
+    
+}
+
 export default countStatuses
