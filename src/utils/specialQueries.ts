@@ -1,4 +1,5 @@
 import countStatuses from "./calc.utils"
+import fs from "fs"
 
 export const APROX_PAGE_SIZE =  2500
 
@@ -30,8 +31,9 @@ export function getTimeframeValue( tf:any ){
 }
 
 
-async function formatStrategiesAndCountingByTimeframe( arr:any, timeframe:any  ){
+ async function formatStrategiesAndCountingByTimeframe( arr:any, timeframe:any  ){
 
+    arr = Array.from(arr)
     // get the first and the last element of an array
     let start = arr[0]
     let end = arr[ arr.length - 1 ]
@@ -40,6 +42,9 @@ async function formatStrategiesAndCountingByTimeframe( arr:any, timeframe:any  )
     let startDate = new Date(start.datetime) 
     let stopDate = new Date(start.datetime)
 
+    //console.log(arr)
+    
+
     // a element with the start date plus a timeframe unit margin
     stopDate.setSeconds( stopDate.getSeconds() + timeframe )
 
@@ -47,26 +52,36 @@ async function formatStrategiesAndCountingByTimeframe( arr:any, timeframe:any  )
     let finalDate = new Date(end.datetime)
 
     let output = []
-
+    let i = 0
 
     while (startDate.getTime() < finalDate.getTime() ){
 
-        let dataFragment = arr.filter( ( { datetime }:any ) =>{
+        let dataFragment = []
 
-            const date = parseInt((new Date( datetime ).getTime() / 1000).toFixed(0))
-            console.log(date)
-            if (date >= startDate.getTime() &&  date < stopDate.getTime()){
-                return true
+        //console.log(startDate, stopDate)
+        for (i = 0; i < arr.length; i++){
+            const date = new Date( arr[i].datetime ).getTime()
+            if(date >= startDate.getTime() && date < stopDate.getTime()){
+                dataFragment.push(arr[i])
+                //arr.splice(i,1)
+            } else{
+                arr.splice(0,i+1)
+                break
             }
-            return false
-        })
+        }
 
-    
-        const pivotElement = dataFragment[ dataFragment.length -1 ]
+        
+        if ( dataFragment.length == 0){
+            startDate.setSeconds( startDate.getSeconds() + timeframe )
+            stopDate.setSeconds( stopDate.getSeconds() + timeframe )
+            continue
+        }
+        let pivotElement:any = dataFragment[ dataFragment.length -1 ]
+        
+        let calcs = await  countStatuses(dataFragment)
 
-        const calcs = await countStatuses(dataFragment)
 
-        output.push({
+         output.push({
             _id: pivotElement._id,
             datetime: pivotElement.datetime,
             open: pivotElement.open,
@@ -75,11 +90,12 @@ async function formatStrategiesAndCountingByTimeframe( arr:any, timeframe:any  )
             close: pivotElement.close,
             calcTotal: calcs
         })
-
         startDate.setSeconds( startDate.getSeconds() + timeframe )
         stopDate.setSeconds( stopDate.getSeconds() + timeframe )
 
     }
+
+    
 
     return output
    

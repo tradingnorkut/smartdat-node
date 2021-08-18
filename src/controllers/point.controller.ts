@@ -45,8 +45,9 @@ export async function getInstrumentPoints (req :Request,res: Response){
             queryParameters.datetime = { $gte: startDate, $lte: endDate }
 
             // Get the counting of the documents
-            calcTotal  = await pointModel.find( queryParameters, "calcs" ).exec()
+            calcTotal  = await pointModel.find( queryParameters ).lean()
             formattedQuery = await formatStrategiesAndCountingByTimeframe( calcTotal, timeframeValue )
+            calcTotal = await countStatuses(calcTotal)
 
 
         } else {
