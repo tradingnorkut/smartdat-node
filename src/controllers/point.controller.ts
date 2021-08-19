@@ -28,6 +28,8 @@ export async function getInstrumentPoints (req :Request,res: Response){
         if( timeframeString){
 
             timeframeValue = getTimeframeValue( timeframeString )
+        } else{
+            throw new Error("invalid timeframe")
         }
         
 
