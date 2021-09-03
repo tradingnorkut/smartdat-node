@@ -8,8 +8,6 @@ export async function getASpecificInstrument(req: Request, res:Response) {
     {
         const instrumentId: string = req.params.instrumentId
 
-
-
         const instrument = await instrumentModel.findOne( {_id : instrumentId}, "_id name params" ).lean()
 
         if (!instrument){
@@ -26,7 +24,7 @@ export async function getASpecificInstrument(req: Request, res:Response) {
 
         
     } catch (err) {
-        log.error(err)
+        log.error( err as string)
         res.status(500).json(
             {
                 ok:false,

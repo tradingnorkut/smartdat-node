@@ -27,7 +27,7 @@ export async function getAllQueries (req :Request,res: Response){
         res.status(200).json(queries)
 
     } catch(err){
-        log.error(err)
+        log.error(err as string)
         res.status(500).json(
             {
                 ok:false,
@@ -63,7 +63,7 @@ export async function getASpecificQuery (req :Request,res: Response){
 
         
     } catch (err) {
-        log.error(err)
+        log.error(err as string )
         res.status(500).json(
             {
                 ok:false,

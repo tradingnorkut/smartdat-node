@@ -80,7 +80,7 @@ export async function getInstrumentPoints (req :Request,res: Response){
         //Send the final data
         res.status(200).json(resp)
     } catch(err){
-        log.error(err)
+        log.error(err as string )
         res.status(500).json(
             {
                 ok:false,
@@ -100,7 +100,7 @@ export async  function getASpecificCoordinateWithCalcs( req: Request, res:Respon
 
         res.status(200).json(coordinate)
     } catch(err){
-        log.error(err)
+        log.error(err as string)
         res.status(500).json(
             {
                 ok:false,
